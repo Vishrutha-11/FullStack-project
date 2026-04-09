@@ -1,0 +1,75 @@
+
+<div class="main-wrapper">
+
+  <div class="container">
+    <div class="form-container">
+      <h1>Employee Form</h1>
+
+      <form #empForm="ngForm">
+
+        <!-- NAME -->
+        <div class="input-group">
+          <input type="text" name="name" ngModel required>
+          <label>Name</label>
+        </div>
+
+        <!-- PHONE -->
+        <div class="input-group">
+          <input type="tel" name="phoneNumber" ngModel required pattern="[0-9]{10}">
+          <label>Phone Number</label>
+        </div>
+
+        <!-- DEPARTMENT -->
+        <div class="input-group dept-group">
+          <select name="department" ngModel required>
+            <option value="" disabled selected>Select</option>
+            <option>IT</option>
+            <option>HR</option>
+            <option>Finance</option>
+          </select>
+          <label>Department</label>
+        </div>
+
+        <!-- ADDRESS -->
+        <div class="input-group">
+          <textarea rows="3" name="address" ngModel required></textarea>
+          <label>Address</label>
+        </div>
+
+        <!-- GENDER -->
+        <div class="gender">
+          <span>Gender:</span><br>
+
+          <label class="radio-inline">
+            <input type="radio" name="gender" value="true" ngModel> Male
+          </label>
+
+          <label class="radio-inline">
+            <input type="radio" name="gender" value="false" ngModel> Female
+          </label>
+        </div>
+
+        <!-- ADDRESS PROOF -->
+         <span>Address Proof:</span><br>
+        <div class="input-group">
+          <input type="text" name="addressProof" ngModel required>
+          <label>Address Proof (Aadhar / PAN)</label>
+        </div>
+
+        <!-- FILE UPLOAD -->
+        <div class="file-group">
+          <span class="file-title">Upload File</span>
+
+          <div class="upload-box">
+            <input type="file" multiple>
+          </div>
+        </div>
+
+        <!-- BUTTON -->
+        <button type="submit">Submit</button>
+
+      </form>
+    </div>
+  </div>
+
+</div>
