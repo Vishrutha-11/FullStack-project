@@ -1,75 +1,75 @@
-
 <div class="main-wrapper">
 
-  <div class="container">
-    <div class="form-container">
-      <h1>Employee Form</h1>
+  <!-- FORM -->
+  <div class="form-container">
+    <h1>Employee Form</h1>
 
-      <form #empForm="ngForm">
+    <form #empForm="ngForm" (ngSubmit)="onSubmit(empForm)">
 
-        <!-- NAME -->
-        <div class="input-group">
-          <input type="text" name="name" ngModel required>
-          <label>Name</label>
-        </div>
+      <!-- NAME -->
+     <div class="input-group">
+  <input type="text" name="name" ngModel placeholder=" ">
+  <label>Name</label>
+</div>
 
-        <!-- PHONE -->
-        <div class="input-group">
-          <input type="tel" name="phoneNumber" ngModel required pattern="[0-9]{10}">
-          <label>Phone Number</label>
-        </div>
+      <!-- PHONE -->
+      <div class="input-group">
+      <input type="text" name="phoneNumber" [(ngModel)]="employee.phoneNumber" required />
+        <label>Phone Number</label>
+      </div>
 
-        <!-- DEPARTMENT -->
-        <div class="input-group dept-group">
-          <select name="department" ngModel required>
-            <option value="" disabled selected>Select</option>
-            <option>IT</option>
-            <option>HR</option>
-            <option>Finance</option>
-          </select>
-          <label>Department</label>
-        </div>
+      <!-- DEPARTMENT (MANUAL INPUT) -->
+<div class="input-group">
+<input type="text" name="department" ngModel placeholder=" ">
+  <label>Department</label>
+</div>
 
-        <!-- ADDRESS -->
-        <div class="input-group">
-          <textarea rows="3" name="address" ngModel required></textarea>
-          <label>Address</label>
-        </div>
+      <!-- ADDRESS -->
+      <div class="input-group">
+        <textarea rows="3" name="address" ngModel placeholder=" "></textarea>
+        <label>Address</label>
+      </div>
 
-        <!-- GENDER -->
-        <div class="gender">
-          <span>Gender:</span><br>
+      <!-- GENDER -->
+      <div class="gender">
+        <span>Gender:</span><br>
 
-          <label class="radio-inline">
-            <input type="radio" name="gender" value="true" ngModel> Male
-          </label>
+        <label>
+         <input type="radio" name="gender" value="true" ngModel> Male
+        </label>
 
-          <label class="radio-inline">
-            <input type="radio" name="gender" value="false" ngModel> Female
-          </label>
-        </div>
+        <label>
+          <input type="radio" name="gender" value="false" ngModel> Female
+        </label>
+      </div>
 
-        <!-- ADDRESS PROOF -->
-         <span>Address Proof:</span><br>
-        <div class="input-group">
-          <input type="text" name="addressProof" ngModel required>
-          <label>Address Proof (Aadhar / PAN)</label>
-        </div>
+      <!-- BUTTON -->
+      <button type="submit">Submit</button>
 
-        <!-- FILE UPLOAD -->
-        <div class="file-group">
-          <span class="file-title">Upload File</span>
+    </form>
+  </div>
 
-          <div class="upload-box">
-            <input type="file" multiple>
-          </div>
-        </div>
+  <!-- TABLE -->
+  <div class="table-container">
+    <h2>Employee List</h2>
 
-        <!-- BUTTON -->
-        <button type="submit">Submit</button>
+    <table>
+  <tr>
+    <th>Name</th>
+    <th>PhoneNumber</th>
+    <th>Department</th>
+    <th>Address</th>
+    <th>Gender</th>
+  </tr>
 
-      </form>
-    </div>
+  <tr *ngFor="let emp of employees">
+    <td>{{ emp.name }}</td>
+    <td>{{ emp.phoneNumber }}</td>
+    <td>{{ emp.department }}</td>
+    <td>{{ emp.address }}</td>
+    <td>{{ emp.gender }}</td>
+  </tr>
+</table>
   </div>
 
 </div>

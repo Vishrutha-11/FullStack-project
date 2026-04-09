@@ -4,8 +4,21 @@ import { HttpClient}  from '@angular/common/http';
   providedIn: 'root'
 })
 export class EmployeService {
-apiurl='https://localhost:7282/api/Employe';
-  constructor() { }
 
+  baseUrl = 'https://localhost:7282/api';
 
+  constructor(private http: HttpClient) {}
+
+addEmployee(data: any) {
+  return this.http.post(`${this.baseUrl}/Employe/Insert`, data, {
+    responseType: 'text' as 'json'
+  });
 }
+
+getEmployees() {
+  return this.http.get<any[]>(`${this.baseUrl}/Employe/GetAll`);
+}
+
+  
+}
+
