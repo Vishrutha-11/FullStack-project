@@ -69,9 +69,14 @@ getProofs() {
     }
   });
 }
+showDropdown: boolean = false;
+
+toggleDropdown() {
+  this.showDropdown = !this.showDropdown;
+}
   onSubmit(form: NgForm) {
 
-  if (form.invalid) {
+  if (form.invalid || this.selectedProofIds.length === 0) {
     return;
   }
 
@@ -89,8 +94,19 @@ ProofIds: this.selectedProofIds ?? []
     next: (res: any) => {
       console.log(res.message);
       alert('Saved Successfully ✅');
-      form.reset();
       this.selectedProofIds = [];
+      form.resetForm();
+
+      this.employee = {
+      
+        name: '',
+        phoneNumber: '',
+        deptId: '',
+        address: '',
+        gender: '',
+        groupId: '',
+        proofIds: []
+      };
       this.loadEmployees();
     },
     error: (err) => {

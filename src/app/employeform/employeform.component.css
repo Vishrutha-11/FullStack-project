@@ -145,7 +145,39 @@ th {
 tr:nth-child(even) {
   background-color: #faf6f2;
 }
+/* Dropdown button */
+.dropdown {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  cursor: pointer;
+  background: #fff;
+}
 
+/* Dropdown list */
+.dropdown-list {
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  margin-top: 5px;
+  max-height: 150px;
+  overflow-y: auto;
+  background: #fff;
+  padding: 10px;
+}
+
+/* Items */
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 0;
+}
+
+.proof-dropdown {
+  width: 100%;
+  min-height: 100px;
+  padding: 10px;
+}
 /* Wrapper */
 .proof-group {
   display: flex;
@@ -196,4 +228,11 @@ tr:nth-child(even) {
 .proof-item input[type="checkbox"]:checked + span {
   color: #007bff;
   font-weight: 600;
+}
+
+.error {
+  color: red;
+  font-size: 12px;
+  margin-top: 4px;
+  display: block;
 }

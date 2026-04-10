@@ -8,19 +8,28 @@
 
       <!-- NAME -->
       <div class="input-group">
-        <input type="text" name="name" [(ngModel)]="employee.name" required>
+        <input type="text" name="name" [(ngModel)]="employee.name" #name="ngModel"required>
         <label>Name</label>
+        <small class="error"
+       *ngIf="(empForm.submitted || name.touched) && !employee.name">
+  Name is required
+</small>
       </div>
 
       <!-- PHONE -->
       <div class="input-group">
-        <input type="text" name="phoneNumber" [(ngModel)]="employee.phoneNumber" required>
+        <input type="text" name="phoneNumber" [(ngModel)]="employee.phoneNumber" #phone="ngModel" required pattern="^[0-9]{10}$">
         <label>Phone Number</label>
+
+<small class="error"
+       *ngIf="(empForm.submitted || phone.touched) && phone.invalid">
+  Valid phone required
+</small>
       </div>
 
       <!-- DEPARTMENT -->
       <div class="input-group dept-group">
-       <select name="deptId" [(ngModel)]="employee.deptId">
+       <select name="deptId" [(ngModel)]="employee.deptId" #name="ngModel" >
           <option value="" disabled selected hidden>Select</option>
           <option *ngFor="let d of departments" [value]="d.deptId">
             {{ d.name }}
@@ -31,8 +40,12 @@
 
       <!-- ADDRESS -->
       <div class="input-group">
-        <textarea rows="3" name="address" [(ngModel)]="employee.address" required></textarea>
+        <textarea rows="3" name="address" [(ngModel)]="employee.address" #address="ngModel"required></textarea>
         <label>Address</label>
+        <small class="error"
+       *ngIf="(empForm.submitted || address.touched) && address.invalid">
+  Address required
+</small>
       </div>
 
       <!-- GENDER -->
@@ -40,34 +53,45 @@
         <span>Gender:</span><br>
 
         <label>
-          <input type="radio" name="gender" value="Male" [(ngModel)]="employee.gender"> Male
+          <input type="radio" name="gender" value="Male" [(ngModel)]="employee.gender" #gender="ngModel"> Male
         </label>
 
         <label>
-          <input type="radio" name="gender" value="Female" [(ngModel)]="employee.gender"> Female
+          <input type="radio" name="gender" value="Female" [(ngModel)]="employee.gender" #gender="ngModel"> Female
         </label>
+        <div class="error"
+     *ngIf="(empForm.submitted || gender.touched) && gender.invalid">
+  Gender required
+</div>
       </div>
 
-     <!-- Proofs -->
+     
 <!-- PROOFS -->
-<div class="proof-group">
+ <div class="proof-group">
   <label class="proof-label">Proofs</label>
 
-  <div class="proof-container">
-    <label class="proof-item" *ngFor="let p of proofList">
+  <!-- DROPDOWN BUTTON -->
+  <div class="dropdown" (click)="toggleDropdown()">
+    Select Proofs ▼
+  </div>
+
+  <!-- DROPDOWN LIST -->
+  <div class="dropdown-list" *ngIf="showDropdown">
+    <label *ngFor="let p of proofList" class="dropdown-item">
       <input type="checkbox"
              [value]="p.pId"
-             (change)="onProofChange($event)">
-      <span>{{ p.pName }}</span>
+             (change)="onProofChange($event)"
+             [checked]="selectedProofIds.includes(p.pId)">
+      {{ p.pName }}
     </label>
   </div>
 
-  <!-- DEBUG (REMOVE LATER) -->
-  <div *ngIf="proofList.length === 0" style="color:red;">
-    No proofs loaded
+  <!-- VALIDATION -->
+  <div class="error"
+       *ngIf="empForm.submitted && selectedProofIds.length === 0">
+    Select at least one proof
   </div>
 </div>
-  
 
       <!-- BUTTON -->
       <button type="submit">Submit</button>
