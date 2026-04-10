@@ -10,15 +10,18 @@ import { EmployeService } from '../employe.service';
 
 
 export class EmployeformComponent implements OnInit {
-
-  employees: any[] = [];
-  employee: any = {
-    empId:'',
+selectedProofIds: number[] = [];
+employees: any[] = [];
+proofList: any[] = [];
+employee: any = {
+  empId: '',
   name: '',
   phoneNumber: '',
   deptId: '',
   address: '',
   gender: '',
+  groupId: '',        // ✅ ADD THIS
+  proofIds: []        // ✅ ADD THIS (for insert)
 };
 departments:any[]=[];
 constructor(private employeService: EmployeService) { }
@@ -26,6 +29,7 @@ constructor(private employeService: EmployeService) { }
 ngOnInit() {
     this.loadEmployees();
     this.getDepartments();
+    this.getProofs();
   }
 
   // ✅ FETCH DATA
@@ -42,7 +46,29 @@ getDepartments() {
       this.departments = res; // ✅ FIXED
     });
   }
+onProofChange(event: any) {
+  const value = +event.target.value;
 
+  if (event.target.checked) {
+    if (!this.selectedProofIds.includes(value)) {
+      this.selectedProofIds.push(value);
+    }
+  } else {
+    this.selectedProofIds = this.selectedProofIds.filter(x => x !== value);
+  }
+}
+
+getProofs() {
+  this.employeService.getProofs().subscribe({
+    next: (res) => {
+      console.log('Proofs:', res);
+      this.proofList = res;
+    },
+    error: (err) => {
+      console.error(err);
+    }
+  });
+}
   onSubmit(form: NgForm) {
 
   if (form.invalid) {
@@ -50,12 +76,13 @@ getDepartments() {
   }
 
   const payload = {
-    EmpId:form.value.EmpId,
-    name: form.value.name,
-    phoneNumber: form.value.phoneNumber,
-    deptId: form.value.deptId,
-    address: form.value.address,
-    gender: form.value.gender === 'true'
+    
+    Name: form.value.name,
+    PhoneNumber: form.value.phoneNumber,
+  DeptId: Number(form.value.deptId),
+    Address: form.value.address,
+   Gender: form.value.gender === 'Male' ? 1 : 0,
+ProofIds: this.selectedProofIds ?? []
   };
 
   this.employeService.addEmployee(payload).subscribe({
@@ -63,10 +90,12 @@ getDepartments() {
       console.log(res.message);
       alert('Saved Successfully ✅');
       form.reset();
+      this.selectedProofIds = [];
       this.loadEmployees();
     },
     error: (err) => {
-      console.error("API ERROR:", err);
+        console.error("FULL ERROR:", err);
+  console.error("ERROR MESSAGE:", err.error);
     }
   });
 

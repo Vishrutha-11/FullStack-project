@@ -48,6 +48,27 @@
         </label>
       </div>
 
+     <!-- Proofs -->
+<!-- PROOFS -->
+<div class="proof-group">
+  <label class="proof-label">Proofs</label>
+
+  <div class="proof-container">
+    <label class="proof-item" *ngFor="let p of proofList">
+      <input type="checkbox"
+             [value]="p.pId"
+             (change)="onProofChange($event)">
+      <span>{{ p.pName }}</span>
+    </label>
+  </div>
+
+  <!-- DEBUG (REMOVE LATER) -->
+  <div *ngIf="proofList.length === 0" style="color:red;">
+    No proofs loaded
+  </div>
+</div>
+  
+
       <!-- BUTTON -->
       <button type="submit">Submit</button>
 
@@ -66,6 +87,8 @@
         <th>Department</th>
         <th>Address</th>
         <th>Gender</th>
+        
+        <th>Proofs</th>
       </tr>
 
       <tr *ngFor="let emp of employees">
@@ -75,6 +98,19 @@
         <td>{{ emp.department }}</td>
         <td>{{ emp.address }}</td>
                  <td>{{ emp.gender ? 'Male' : 'Female' }}</td>
+      
+<td>
+  {{ emp.proofs?.length ? emp.proofs.join(', ') : 'No Proof' }}
+</td>
+              <td>
+  <!-- <span *ngFor="let p of emp.proofs" class="badge">
+    {{ p }}
+  </span> -->
+
+  <span *ngIf="!emp.proofs || emp.proofs.length === 0">
+    No Proof
+  </span>
+</td>
       </tr>
     </table>
   </div>
