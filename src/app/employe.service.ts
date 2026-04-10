@@ -19,6 +19,9 @@ getEmployees() {
   return this.http.get<any[]>(`${this.baseUrl}/Employe/GetAll`);
 }
 
-  
+ 
+getDepartments() {
+  return this.http.get<any[]>('https://localhost:7282/api/Employe/GetDepartments');
+}
 }
 

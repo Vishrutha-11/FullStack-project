@@ -7,26 +7,31 @@
     <form #empForm="ngForm" (ngSubmit)="onSubmit(empForm)">
 
       <!-- NAME -->
-     <div class="input-group">
-  <input type="text" name="name" ngModel placeholder=" ">
-  <label>Name</label>
-</div>
+      <div class="input-group">
+        <input type="text" name="name" [(ngModel)]="employee.name" required>
+        <label>Name</label>
+      </div>
 
       <!-- PHONE -->
       <div class="input-group">
-      <input type="text" name="phoneNumber" [(ngModel)]="employee.phoneNumber" required />
+        <input type="text" name="phoneNumber" [(ngModel)]="employee.phoneNumber" required>
         <label>Phone Number</label>
       </div>
 
-      <!-- DEPARTMENT (MANUAL INPUT) -->
-<div class="input-group">
-<input type="text" name="department" ngModel placeholder=" ">
-  <label>Department</label>
-</div>
+      <!-- DEPARTMENT -->
+      <div class="input-group dept-group">
+       <select name="deptId" [(ngModel)]="employee.deptId">
+          <option value="" disabled selected hidden>Select</option>
+          <option *ngFor="let d of departments" [value]="d.deptId">
+            {{ d.name }}
+          </option>
+        </select>
+        <label>Department</label>
+      </div>
 
       <!-- ADDRESS -->
       <div class="input-group">
-        <textarea rows="3" name="address" ngModel placeholder=" "></textarea>
+        <textarea rows="3" name="address" [(ngModel)]="employee.address" required></textarea>
         <label>Address</label>
       </div>
 
@@ -35,11 +40,11 @@
         <span>Gender:</span><br>
 
         <label>
-         <input type="radio" name="gender" value="true" ngModel> Male
+          <input type="radio" name="gender" value="Male" [(ngModel)]="employee.gender"> Male
         </label>
 
         <label>
-          <input type="radio" name="gender" value="false" ngModel> Female
+          <input type="radio" name="gender" value="Female" [(ngModel)]="employee.gender"> Female
         </label>
       </div>
 
@@ -54,22 +59,24 @@
     <h2>Employee List</h2>
 
     <table>
-  <tr>
-    <th>Name</th>
-    <th>PhoneNumber</th>
-    <th>Department</th>
-    <th>Address</th>
-    <th>Gender</th>
-  </tr>
+      <tr>
+        <th>EmpId</th>
+        <th>Name</th>
+        <th>PhoneNumber</th>
+        <th>Department</th>
+        <th>Address</th>
+        <th>Gender</th>
+      </tr>
 
-  <tr *ngFor="let emp of employees">
-    <td>{{ emp.name }}</td>
-    <td>{{ emp.phoneNumber }}</td>
-    <td>{{ emp.department }}</td>
-    <td>{{ emp.address }}</td>
-    <td>{{ emp.gender }}</td>
-  </tr>
-</table>
+      <tr *ngFor="let emp of employees">
+        <td>{{emp.empId}}</td>
+        <td>{{ emp.name }}</td>
+        <td>{{ emp.phoneNumber }}</td>
+        <td>{{ emp.department }}</td>
+        <td>{{ emp.address }}</td>
+                 <td>{{ emp.gender ? 'Male' : 'Female' }}</td>
+      </tr>
+    </table>
   </div>
 
 </div>

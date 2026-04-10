@@ -13,16 +13,19 @@ export class EmployeformComponent implements OnInit {
 
   employees: any[] = [];
   employee: any = {
+    empId:'',
   name: '',
   phoneNumber: '',
-  department: '',
+  deptId: '',
   address: '',
   gender: '',
 };
+departments:any[]=[];
 constructor(private employeService: EmployeService) { }
 
 ngOnInit() {
     this.loadEmployees();
+    this.getDepartments();
   }
 
   // ✅ FETCH DATA
@@ -33,6 +36,13 @@ loadEmployees() {
   });
 }
 
+getDepartments() {
+    this.employeService.getDepartments().subscribe((res: any) => {
+      console.log("Departments API Response:", res);
+      this.departments = res; // ✅ FIXED
+    });
+  }
+
   onSubmit(form: NgForm) {
 
   if (form.invalid) {
@@ -40,9 +50,10 @@ loadEmployees() {
   }
 
   const payload = {
+    EmpId:form.value.EmpId,
     name: form.value.name,
     phoneNumber: form.value.phoneNumber,
-    department: form.value.department,
+    deptId: form.value.deptId,
     address: form.value.address,
     gender: form.value.gender === 'true'
   };
