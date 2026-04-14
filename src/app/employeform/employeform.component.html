@@ -8,28 +8,27 @@
 
       <!-- NAME -->
       <div class="input-group">
-        <input type="text" name="name" [(ngModel)]="employee.name" #name="ngModel"required>
+        <input type="text" name="name" [(ngModel)]="employee.name" #name="ngModel" required>
         <label>Name</label>
-        <small class="error"
-       *ngIf="(empForm.submitted || name.touched) && !employee.name">
-  Name is required
-</small>
+        <small class="error" *ngIf="(empForm.submitted || name.touched) && !employee.name">
+          Name is required
+        </small>
       </div>
 
       <!-- PHONE -->
       <div class="input-group">
-        <input type="text" name="phoneNumber" [(ngModel)]="employee.phoneNumber" #phone="ngModel" required pattern="^[0-9]{10}$">
+        <input type="text" name="phoneNumber" [(ngModel)]="employee.phoneNumber" #phone="ngModel" required
+          pattern="^[0-9]{10}$">
         <label>Phone Number</label>
 
-<small class="error"
-       *ngIf="(empForm.submitted || phone.touched) && phone.invalid">
-  Valid phone required
-</small>
+        <small class="error" *ngIf="(empForm.submitted || phone.touched) && phone.invalid">
+          Valid phone required
+        </small>
       </div>
 
       <!-- DEPARTMENT -->
       <div class="input-group dept-group">
-       <select name="deptId" [(ngModel)]="employee.deptId" #name="ngModel" >
+        <select name="deptId" [(ngModel)]="employee.deptId" #deptId="ngModel" required>
           <option value="" disabled selected hidden>Select</option>
           <option *ngFor="let d of departments" [value]="d.deptId">
             {{ d.name }}
@@ -40,17 +39,16 @@
 
       <!-- ADDRESS -->
       <div class="input-group">
-        <textarea rows="3" name="address" [(ngModel)]="employee.address" #address="ngModel"required></textarea>
+        <textarea rows="3" name="address" [(ngModel)]="employee.address" #address="ngModel" required></textarea>
         <label>Address</label>
-        <small class="error"
-       *ngIf="(empForm.submitted || address.touched) && address.invalid">
-  Address required
-</small>
+        <small class="error" *ngIf="(empForm.submitted || address.touched) && address.invalid">
+          Address required
+        </small>
       </div>
 
       <!-- GENDER -->
       <div class="gender">
-        <span>Gender:</span><br>
+        <span class="span">Gender</span><br>
 
         <label>
           <input type="radio" name="gender" value="Male" [(ngModel)]="employee.gender" #gender="ngModel"> Male
@@ -59,40 +57,50 @@
         <label>
           <input type="radio" name="gender" value="Female" [(ngModel)]="employee.gender" #gender="ngModel"> Female
         </label>
-        <div class="error"
-     *ngIf="(empForm.submitted || gender.touched) && gender.invalid">
-  Gender required
-</div>
+        <div class="error" *ngIf="(empForm.submitted || gender.touched) && gender.invalid">
+          Gender required
+        </div>
       </div>
 
-     
-<!-- PROOFS -->
- <div class="proof-group">
-  <label class="proof-label">Proofs</label>
 
-  <!-- DROPDOWN BUTTON -->
-  <div class="dropdown" (click)="toggleDropdown()">
-    Select Proofs ▼
-  </div>
+      <!-- PROOFS -->
+      <div class="proof-group">
+        <span class="span">Proofs</span>
+        <label class="proof-label"></label>
 
-  <!-- DROPDOWN LIST -->
-  <div class="dropdown-list" *ngIf="showDropdown">
-    <label *ngFor="let p of proofList" class="dropdown-item">
-      <input type="checkbox"
-             [value]="p.pId"
-             (change)="onProofChange($event)"
-             [checked]="selectedProofIds.includes(p.pId)">
-      {{ p.pName }}
-    </label>
-  </div>
+        <!-- DROPDOWN BUTTON -->
+        <div class="dropdown" (click)="toggleDropdown()">
+          Select Proofs ▼
+        </div>
 
-  <!-- VALIDATION -->
-  <div class="error"
-       *ngIf="empForm.submitted && selectedProofIds.length === 0">
-    Select at least one proof
-  </div>
-</div>
+        <!-- DROPDOWN LIST -->
+        <div class="dropdown-list" *ngIf="showDropdown">
+          <label *ngFor="let p of proofList" class="dropdown-item">
+            <input type="checkbox" [value]="p.pId" (change)="onProofChange($event)"
+              [checked]="selectedProofIds.includes(p.pId)">
+            {{ p.pName }}
+          </label>
+        </div>
 
+        <!-- VALIDATION -->
+        <div class="error" *ngIf="empForm.submitted && selectedProofIds.length === 0">
+          Select at least one proof
+        </div>
+      </div>
+
+       <!-- UPLOAD DOCUMENT -->
+      <div class="input-group">
+        <span class="span">Upload Document</span>
+        <input type="file"
+               name="document"
+               (change)="onFileSelected($event)"
+               required>
+        <label></label>
+
+        <small class="error" *ngIf="empForm.submitted && selectedFiles.length === 0">
+          Document required
+        </small>
+      </div>
       <!-- BUTTON -->
       <button type="submit">Submit</button>
 
@@ -111,8 +119,10 @@
         <th>Department</th>
         <th>Address</th>
         <th>Gender</th>
-        
+
         <th>Proofs</th>
+        <th>Document</th>
+        <th>Action</th>
       </tr>
 
       <tr *ngFor="let emp of employees">
@@ -121,20 +131,47 @@
         <td>{{ emp.phoneNumber }}</td>
         <td>{{ emp.department }}</td>
         <td>{{ emp.address }}</td>
-                 <td>{{ emp.gender ? 'Male' : 'Female' }}</td>
-      
-<td>
-  {{ emp.proofs?.length ? emp.proofs.join(', ') : 'No Proof' }}
-</td>
-              <td>
-  <!-- <span *ngFor="let p of emp.proofs" class="badge">
+        <td>{{ emp.gender ? 'Male' : 'Female' }}</td>
+
+        <td>
+          {{ emp.proofs?.length ? emp.proofs.join(', ') : 'No Proof' }}
+        </td>
+        
+          <!-- <span *ngFor="let p of emp.proofs" class="badge">
     {{ p }}
   </span> -->
 
-  <span *ngIf="!emp.proofs || emp.proofs.length === 0">
-    No Proof
+          <!-- <span *ngIf="!emp.proofs || emp.proofs.length === 0"></span> -->
+        
+        <!-- DOCUMENT -->
+        <!-- <tr *ngFor="let emp of employees">
+  <td>{{ emp.name }}</td>
+  <td>
+    <button *ngIf="emp.documentPath" (click)="viewDocument(emp.documentPath)">
+      View Document
+    </button>
+  </td>
+</tr> -->
+<td>
+
+  <button *ngIf="emp.documents?.length > 0"
+          (click)="open(emp.documents[0])">
+    View Document
+  </button>
+
+  <span *ngIf="!emp.documents?.length">
+    No File
   </span>
+
 </td>
+
+        <!-- ACTION -->
+       <td>
+          <button class="action-btn edit">Edit</button>
+          <button class="action-btn delete">Delete</button>
+        </td> 
+
+
       </tr>
     </table>
   </div>
