@@ -1,5 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient}  from '@angular/common/http';
+import { BehaviorSubject, Observable } from 'rxjs';
+import { tap } from 'rxjs/operators';
+
 @Injectable({
   providedIn: 'root'
 })
@@ -32,5 +35,28 @@ getDepartments() {
  getProofs() {
     return this.http.get<any[]>(`https://localhost:7282/api/Employe/GetProof`);
   }
+GetAmazonS3AccessKey() {
+  return this.http.get(
+    'https://external.balajitransports.in/api/DBConnectionString/GetAmazons3CredentialsS3AccessKey',
+    { responseType: 'text' }
+  );
+}
+
+GetAmazonS3SecretKey() {
+  return this.http.get(
+    'https://external.balajitransports.in/api/DBConnectionString/GetAmazons3CredentialsS3SecretKey',
+    { responseType: 'text' }
+  );
+}
+
+
+
+uploadToS3(file: File, presignedUrl: string) {
+    return this.http.put(presignedUrl, file, {
+      headers: { 'Content-Type': file.type }
+    });
+  }
+
+ 
 }
 

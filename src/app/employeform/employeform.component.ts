@@ -3,7 +3,7 @@ import { NgForm } from '@angular/forms';
 import { EmployeService } from '../employe.service';
 import * as CryptoJS from 'crypto-js';
 import { HttpClient } from '@angular/common/http';
-
+import { Observable } from 'rxjs';
 @Component({
   selector: 'app-employeform',
   templateUrl: './employeform.component.html',
@@ -28,7 +28,7 @@ export class EmployeformComponent implements OnInit {
     groupId: '',
     proofIds: []
   };
-
+uploadedUrls: string[] = [];
   departments: any[] = [];
 
   awsAccessKey: any;
@@ -38,36 +38,84 @@ export class EmployeformComponent implements OnInit {
   constructor(private employeService: EmployeService, private http: HttpClient) { }
 
   ngOnInit() {
+    
     this.loadEmployees();
     this.getDepartments();
     this.getProofs();
 
-    // ✅ Access Key
-    this.employeService.getAWSAccessKey().subscribe(res => {
+    // Load ACCESS Key
+    this.employeService.GetAmazonS3AccessKey().subscribe(res => {
+      console.log("Encrypted Access Key:", res);
       this.awsAccessKey = this.decrypt(res);
-      console.log("Access Key:", this.awsAccessKey);
+      console.log("Decrypted Access Key:", this.awsAccessKey);
     });
 
-    // ✅ Secret Key
-    this.employeService.getAWSSecretKey().subscribe(res => {
+    // Load SECRET Key
+    this.employeService.GetAmazonS3SecretKey().subscribe(res => {
+      console.log("Encrypted Secret Key:", res);
       this.awsSecretKey = this.decrypt(res);
-      console.log("Secret Key:", this.awsSecretKey);
+      console.log("Decrypted Secret Key:", this.awsSecretKey);
     });
+    
+  }
+uploadToS3(file: File, presignedUrl: string): Observable<any> {
+
+  return this.http.put(presignedUrl, file, {
+    headers: {
+      'Content-Type': file.type
+    }
+  });
+}
+
+async uploadFile(file: File) {
+
+  const res: any = await this.http
+    .get(`https://localhost:7282/api/S3/GetPresignedUrl?fileName=${file.name}`)
+    .toPromise();
+
+  const url = res.url;
+
+  await this.uploadToS3(file, url).toPromise();
+
+  console.log("Uploaded successfully:", url);
+
+  // REMOVE query string → store clean S3 URL
+  const cleanUrl = url.split('?')[0];
+
+  this.uploadedUrls.push(cleanUrl);
+}
+async onFileSelected(event: any) {
+
+  const files = event.target.files;
+
+  if (!files || files.length === 0) return;
+
+  this.selectedFiles = [];
+
+  const uploadPromises: Promise<any>[] = [];
+
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    this.selectedFiles.push(file);
+
+    uploadPromises.push(this.uploadFile(file)); // no await here
   }
 
-  // ✅ DECRYPT
+  await Promise.all(uploadPromises);
+
+  console.log("All files uploaded 🚀");
+}
+  // Decrypts an AES-encrypted string and returns the original text
   decrypt(encryptedText: string): string {
-    const key = CryptoJS.enc.Utf8.parse('NLKpQsoPaeoZ55ul');
-    const iv = CryptoJS.enc.Utf8.parse('RbeqxtNXxucHI123');
-
-    const decrypted = CryptoJS.AES.decrypt(encryptedText, key, {
-      iv: iv,
-      mode: CryptoJS.mode.CBC,
-      padding: CryptoJS.pad.Pkcs7
-    });
-
-    return decrypted.toString(CryptoJS.enc.Utf8);
-  }
+  const key = CryptoJS.enc.Utf8.parse('NLKpQsoPaeoZ55ul');  // Secret key
+  const iv = CryptoJS.enc.Utf8.parse('RbeqxtNXxucHI123');   // Initialization Vector
+  const decrypted = CryptoJS.AES.decrypt(encryptedText, key, {
+    iv: iv,
+    mode: CryptoJS.mode.CBC,
+    padding: CryptoJS.pad.Pkcs7
+  });
+  return decrypted.toString(CryptoJS.enc.Utf8);  // Plain text
+}
 
   // ✅ LOAD EMPLOYEES
   loadEmployees() {
@@ -122,26 +170,14 @@ export class EmployeformComponent implements OnInit {
 open(fileUrl: string) {
   window.open(fileUrl, '_blank');
 }
-uploadFile(file: File, presignedUrl: string) {
-  return this.http.put(presignedUrl, file, {
-    headers: {
-      'Content-Type': file.type
-    }
-  });
-}
-onFileSelected(event: any) {
-  this.selectedFiles = []; // clear old files
+// uploadFile(file: File, presignedUrl: string) {
+//   return this.http.put(presignedUrl, file, {
+//     headers: {
+//       'Content-Type': file.type
+//     }
+//   });
+// }
 
-  const files = event.target.files;
-
-  if (!files || files.length === 0) {
-    return;
-  }
-
-  for (let i = 0; i < files.length; i++) {
-    this.selectedFiles.push(files[i]);
-  }
-}
   // ✅ OPEN DOCUMENT
 // open(fileUrl: string) {
 //   this.employeService.getS3DocumentFile(fileUrl).subscribe({
@@ -219,8 +255,8 @@ getUniqueProofs(proofs: string[]) {
   });
 
     // ✅ FILES
-    this.selectedFiles.forEach(file => {
-  formData.append("Documents", file, file.name); // ✅ REQUIRED
+  this.uploadedUrls.forEach(url => {
+  formData.append("DocumentPaths", url);
 });
 
     console.log("Submitting FormData...");

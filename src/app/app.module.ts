@@ -5,10 +5,14 @@ import { AppComponent } from './app.component';
 import { FormsModule } from '@angular/forms';
 import{HttpClientModule} from '@angular/common/http';
 import { EmployeformComponent } from './employeform/employeform.component';
+
+// import { UploadComponent } from './upload/upload.component';
 @NgModule({
   declarations: [
     AppComponent,
-   EmployeformComponent
+   EmployeformComponent,
+  
+ 
   ],
   imports: [
     BrowserModule,
