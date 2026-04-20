@@ -1,0 +1,273 @@
+/* import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import { Component } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import Swal from 'sweetalert2';
+import { formatDate } from '@angular/common';
+import * as JSZip from 'jszip';
+import { ApiService } from 'src/app/views/service/api.service';
+import { AuthService } from 'src/app/views/auth.service';
+import * as AWS from 'aws-sdk';
+declare var CryptoJS: any;
+@Component({
+  selector: 'app-fileuploadscreen',
+
+  templateUrl: './fileuploadscreen.component.html',
+  styleUrl: './fileuploadscreen.component.scss',
+})
+export class FileuploadscreenComponent {
+  simpleForm!: FormGroup;
+  submitted = false;
+  formErrors: any;
+  formControls!: string[];
+  searchTerm: string = '';
+  formData: any;
+  Display: any;
+  fileUrls: string[] = [];
+  filesToUpload: File[] = [];
+  selectedFileNames: string[] = [];
+  isDragging = false;
+  data: any = {
+    GroupID: '',
+    Description: '',
+    UserId: '',
+    Location: '',
+    FilePaths: [],
+  };
+  AmazonS3AccessKey:any;
+AmazonS3SecretKey:any;
+  constructor(
+    private _http: HttpClient,
+    private Service: ApiService,
+    private formBuilder: FormBuilder,
+    private authService: AuthService
+  ) {
+    this.createForm();
+  }
+
+  ngOnInit(): void {
+
+
+this.Service.GetAmazonS3AccessKey().subscribe(accessKey => {
+    const decodedAccessKey = this.decrypt(accessKey);
+    this.AmazonS3AccessKey = decodedAccessKey;
+   
+
+    this.tryInitializeAWS();
+  });
+
+  this.Service.GetAmazonS3SecretKey().subscribe(secretKey => {
+    const decodedSecretKey = this.decrypt(secretKey);
+    this.AmazonS3SecretKey = decodedSecretKey;
+   
+
+    this.tryInitializeAWS();
+  });
+
+  }
+
+tryInitializeAWS() {
+  if (this.AmazonS3AccessKey && this.AmazonS3SecretKey) {
+    AWS.config.update({
+      region: 'ap-south-1',
+      credentials: new AWS.Credentials({
+        accessKeyId: this.AmazonS3AccessKey,
+        secretAccessKey: this.AmazonS3SecretKey
+      })
+    });
+    
+  }
+}
+
+  
+
+decrypt(encryptedText: string): string {
+  const key = CryptoJS.enc.Utf8.parse('NLKpQsoPaeoZ55ul');
+  const iv = CryptoJS.enc.Utf8.parse('RbeqxtNXxucHI123');
+
+  const decrypted = CryptoJS.AES.decrypt(encryptedText, key, {
+    iv: iv,
+    mode: CryptoJS.mode.CBC,
+    padding: CryptoJS.pad.Pkcs7
+  });
+
+  return decrypted.toString(CryptoJS.enc.Utf8);
+}
+
+
+
+
+  createForm() {
+    this.simpleForm = this.formBuilder.group({
+      GroupID: [''],
+      Description: [''],
+      UserId: [this.authService.getUsername()],
+      Location: [this.authService.getLocation()],
+      FilePaths: [[], [Validators.required]],
+    });
+
+    this.formControls = Object.keys(this.simpleForm.controls);
+  }
+
+  onReset() {
+    this.submitted = false;
+    this.simpleForm.reset();
+  }
+
+  onValidate() {
+    this.submitted = true;
+    return this.simpleForm.status === 'VALID';
+  }
+
+  onSubmit() {
+    console.warn(this.onValidate(), this.simpleForm.value);
+    if (this.onValidate()) {
+      console.warn(this.simpleForm.value);
+    }
+  }
+
+  save(data: any) {
+    this.submitted = true;
+
+    //console.log(data);
+    //console.log(this.simpleForm.value)
+    if (!this.filesToUpload || this.filesToUpload.length === 0) {
+      Swal.fire('Error', 'Please select files.', 'error');
+      return;
+    }
+
+    const filePromises: Promise<string>[] = [];
+    const filePaths: string[] = [];
+
+    for (let i = 0; i < this.filesToUpload.length; i++) {
+      const file = this.filesToUpload[i];
+      filePromises.push(this.uploadToS3(file));
+    }
+
+    Promise.all(filePromises)
+      .then((fileUrls) => {
+        fileUrls.forEach((url) => filePaths.push(url));
+
+        const url =
+          'https://external.balajitransports.in/api/FileUpload/InsertFileUploadDetails';
+        let headers = new HttpHeaders();
+        headers = headers.set(
+          'Content-Type',
+          'application/json; charset=utf-8'
+        );
+
+        const formData = this.simpleForm.value;
+
+        const requestBody = [
+          {
+            GroupID: formData.GroupID ? String(formData.GroupID) : 0,
+            Description: formData.Description,
+            UserId: this.authService.getUserId(),
+            Location: this.authService.getLocationId(),
+            FilePaths: filePaths, // Send file URLs to the API
+          },
+        ];
+
+        //console.log('Request Body:', requestBody); // Log request body to ensure it's correct
+
+        // Send the request to the API
+        this._http
+          .post(url, requestBody, { headers, responseType: 'text' })
+          .subscribe(
+            (response: string) => {
+              // console.log('API Response:', response);
+              if (response === 'Data inserted successfully.') {
+                Swal.fire('Success', 'Data Added Successfully', 'success').then(
+                  (result) => {
+                    if (result.isConfirmed) {
+                      window.location.reload();
+                    }
+                  }
+                );
+              } else if (response === 'Failed to insert.') {
+                Swal.fire('Error', 'Failed to insert.', 'error');
+              } else {
+                Swal.fire(
+                  'Error',
+                  'Unexpected response from the server',
+                  'error'
+                );
+              }
+            },
+            (error) => {
+              console.error('Error during API call:', error); // Improved error logging
+              Swal.fire(
+                'Error',
+                'An error occurred while saving the data.',
+                'error'
+              );
+            }
+          );
+      })
+      .catch((err) => {
+        console.error('File upload error:', err); // Improved error logging
+        Swal.fire('Error', 'Failed to upload files to AWS S3', 'error');
+      });
+  }
+
+  async uploadToS3(file: File): Promise<string> {
+    AWS.config.update({
+      accessKeyId: this.AmazonS3AccessKey,
+      secretAccessKey: this.AmazonS3SecretKey,
+      region: 'ap-south-1',
+    });
+
+    const fileName = file.name;
+    const s3 = new AWS.S3();
+    const params = {
+      Bucket: 'btsworkerfiles',
+      Key: `${fileName}`,
+      Body: file,
+      ContentType: file.type,
+    };
+
+    return new Promise((resolve, reject) => {
+      s3.upload(
+        params,
+        (err: any, data: { Location: string | PromiseLike<string> }) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(data.Location);
+          }
+        }
+      );
+    });
+  }
+
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input?.files) {
+      this.filesToUpload = Array.from(input.files);
+    }
+  }
+
+  onFileDrop(event: DragEvent): void {
+    event.preventDefault(); // Prevent the default drag behavior (e.g., opening the file)
+    this.isDragging = false;
+
+    if (event.dataTransfer?.files) {
+      this.filesToUpload = Array.from(event.dataTransfer.files); // Store dropped files
+    }
+  }
+
+  // Method for drag over
+  onDragOver(event: DragEvent): void {
+    event.preventDefault();
+    this.isDragging = true;
+  }
+
+  // Method for drag leave
+  onDragLeave(event: DragEvent): void {
+    event.preventDefault();
+    this.isDragging = false;
+  }
+
+  removeFile(index: number): void {
+    this.selectedFileNames.splice(index, 1);
+  }
+} */

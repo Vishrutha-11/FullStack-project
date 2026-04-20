@@ -10,7 +10,7 @@ export class AppComponent implements OnInit {
 
   employees: any[] = [];   // ✅ declare variable
 
-  constructor(private employeService: EmployeService) {}  // ✅ inject service
+    constructor(private employeService: EmployeService) {}  // ✅ inject service
 
   ngOnInit() {
     this.employeService.getEmployees().subscribe({

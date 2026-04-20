@@ -63,7 +63,7 @@
       </div>
 
 
-      <!-- PROOFS -->
+       <!-- PROOFS -->
       <div class="proof-group">
         <span class="span">Proofs</span>
         <label class="proof-label"></label>
@@ -89,18 +89,18 @@
       </div>
 
        <!-- UPLOAD DOCUMENT -->
-      <div class="input-group">
-        <span class="span">Upload Document</span>
-        <input type="file"
-               name="document"
-               (change)="onFileSelected($event)"
-               required>
-        <label></label>
+<div class="input-group">
+  <span>Upload Document</span>
 
-        <small class="error" *ngIf="empForm.submitted && selectedFiles.length === 0">
-          Document required
-        </small>
-      </div>
+  <input type="file"
+         (change)="onFileSelected($event)"
+         required>
+
+  <!-- ✅ FIXED for Set -->
+  <small *ngIf="uploadedUrls.size === 0">
+    Document required
+  </small>
+</div>
       <!-- BUTTON -->
       <button type="submit">Submit</button>
 
@@ -136,35 +136,21 @@
         <td>
           {{ emp.proofs?.length ? emp.proofs.join(', ') : 'No Proof' }}
         </td>
-        
-          <!-- <span *ngFor="let p of emp.proofs" class="badge">
-    {{ p }}
-  </span> -->
-
-          <!-- <span *ngIf="!emp.proofs || emp.proofs.length === 0"></span> -->
-        
-        <!-- DOCUMENT -->
-        <!-- <tr *ngFor="let emp of employees">
-  <td>{{ emp.name }}</td>
-  <td>
-    <button *ngIf="emp.documentPath" (click)="viewDocument(emp.documentPath)">
-      View Document
-    </button>
-  </td>
-</tr> -->
 <td>
+  <ng-container *ngIf="emp.documents?.length > 0; else noDocs">
 
-  <button *ngIf="emp.documents?.length > 0"
-          (click)="open(emp.documents[0])">
-    View Document
-  </button>
+    <div *ngFor="let doc of emp.documents">
+      <button (click)="viewDocument(doc)">
+        View Document
+      </button>
+    </div>
 
-  <span *ngIf="!emp.documents?.length">
+  </ng-container>
+
+  <ng-template #noDocs>
     No File
-  </span>
-
+  </ng-template>
 </td>
-
         <!-- ACTION -->
        <td>
           <button class="action-btn edit">Edit</button>

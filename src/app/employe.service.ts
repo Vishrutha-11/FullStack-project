@@ -48,15 +48,29 @@ GetAmazonS3SecretKey() {
     { responseType: 'text' }
   );
 }
-
-
-
-uploadToS3(file: File, presignedUrl: string) {
-    return this.http.put(presignedUrl, file, {
-      headers: { 'Content-Type': file.type }
-    });
+// ✅ FIXED
+  getPresignedUrl(fileName: string, contentType: string) {
+    return this.http.get<any>(
+      `${this.baseUrl}/S3/GetPresignedUrl`,
+      {
+        params: { fileName, contentType }
+      }
+    );
   }
 
- 
+  // ✅ VIEW FILE
+  getViewUrl(fileKey: string) {
+    return this.http.get(
+      `${this.baseUrl}/S3/GetFileViewUrl`,
+      {
+        params: { fileKey },
+        responseType: 'text'
+      }
+    );
+  }
 }
+
+
+
+
 

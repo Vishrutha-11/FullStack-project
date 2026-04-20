@@ -28,6 +28,18 @@
               "src/styles.css"
             ],
             "scripts": []
+            ,
+            
+"allowedCommonJsDependencies": [
+  "aws-sdk",
+  "crypto-js",
+  "buffer",
+  "process",
+  "stream-browserify",
+  "crypto-browserify",
+  "util",
+  "assert"
+]
           },
           "configurations": {
             "production": {
@@ -79,6 +91,7 @@
           "options": {
             "polyfills": [
               "zone.js",
+              "src/polyfills.ts",
               "zone.js/testing"
             ],
             "tsConfig": "tsconfig.spec.json",
@@ -94,5 +107,8 @@
         }
       }
     }
+  },
+  "cli": {
+    "analytics": false
   }
 }
