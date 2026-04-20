@@ -29,7 +29,7 @@
       <!-- DEPARTMENT -->
       <div class="input-group dept-group">
         <select name="deptId" [(ngModel)]="employee.deptId" #deptId="ngModel" required>
-          <option value="" disabled selected hidden>Select</option>
+          <option value="" disabled >Select</option>
           <option *ngFor="let d of departments" [value]="d.deptId">
             {{ d.name }}
           </option>
@@ -94,7 +94,7 @@
 
   <input type="file"
          (change)="onFileSelected($event)"
-         required>
+         multiple required>
 
   <!-- ✅ FIXED for Set -->
   <small *ngIf="uploadedUrls.size === 0">
@@ -102,7 +102,9 @@
   </small>
 </div>
       <!-- BUTTON -->
-      <button type="submit">Submit</button>
+     <button type="submit">
+  {{ selectedEmployeeId ? 'Update' : 'Save' }}
+</button>
 
     </form>
   </div>
@@ -153,8 +155,10 @@
 </td>
         <!-- ACTION -->
        <td>
-          <button class="action-btn edit">Edit</button>
-          <button class="action-btn delete">Delete</button>
+          <button class="action-btn edit" (click)="onEdit(emp)">Edit</button>
+       <button class="action-btn delete" (click)="onDelete(emp.empId)">
+  Delete
+</button>
         </td> 
 
 

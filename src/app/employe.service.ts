@@ -18,9 +18,10 @@ export class EmployeService {
 //   });
 // }
 addEmployee(data: any) {
-  return this.http.post<any>(
-    'https://localhost:7282/api/Employe/InsertEmploye',
-    data
+  return this.http.post(
+    this.baseUrl + '/Employe/InsertEmploye',
+    data,
+    { responseType: 'text' } // ✅
   );
 }
 getEmployees() {
@@ -68,6 +69,20 @@ GetAmazonS3SecretKey() {
       }
     );
   }
+
+updateEmployee(data: any) {
+  return this.http.put(
+    this.baseUrl + '/Employe/Update',
+    data,
+    { responseType: 'text' } // ✅ FIX
+  );
+}
+ deleteEmployee(id: number) {
+  return this.http.delete(
+    this.baseUrl + '/Employe/Delete/' + id,
+    { responseType: 'text' } // ✅ same fix as update
+  );
+}
 }
 
 
