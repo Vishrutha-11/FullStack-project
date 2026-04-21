@@ -141,16 +141,16 @@
 <td>
   <ng-container *ngIf="emp.documents?.length > 0; else noDocs">
 
-    <div *ngFor="let doc of emp.documents">
-      <button (click)="viewDocument(doc)">
-        View Document
-      </button>
-    </div>
+ <div *ngFor="let doc of emp.documents">
+  <button (click)="viewDocument(doc)">
+    View
+  </button>
+</div>
 
   </ng-container>
 
   <ng-template #noDocs>
-    No File
+    No Documents
   </ng-template>
 </td>
         <!-- ACTION -->

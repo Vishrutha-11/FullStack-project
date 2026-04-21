@@ -322,7 +322,6 @@
 // }
 
 
-
 import { Component, OnInit } from '@angular/core';
 import { NgForm } from '@angular/forms';
 import { EmployeService } from '../employe.service';
@@ -347,18 +346,19 @@ export class EmployeformComponent implements OnInit {
 
   selectedProofIds: number[] = [];
   selectedEmployeeId: number | null = null;
-  uploadedUrls = new Set<string>();
+
+  uploadedUrls: Set<string> = new Set<string>();
 
   isUploading = false;
   isSubmitting = false;
-showDropdown: boolean = false;
+  showDropdown: boolean = false;
+
   constructor(private employeService: EmployeService) {}
 
   ngOnInit() {
     this.getDepartments();
     this.getProofs();
 
-    // 🔐 Load keys
     this.employeService.GetAmazonS3AccessKey().subscribe(res => {
       this.awsAccessKey = this.decrypt(res);
     });
@@ -377,7 +377,6 @@ showDropdown: boolean = false;
       deptId: '',
       address: '',
       gender: '',
-      groupId: '',
       proofIds: []
     };
   }
@@ -387,7 +386,7 @@ showDropdown: boolean = false;
     const iv = CryptoJS.enc.Utf8.parse('RbeqxtNXxucHI123');
 
     const decrypted = CryptoJS.AES.decrypt(encryptedText, key, {
-      iv: iv,
+      iv,
       mode: CryptoJS.mode.CBC,
       padding: CryptoJS.pad.Pkcs7
     });
@@ -408,93 +407,81 @@ showDropdown: boolean = false;
       gender: emp.gender ? 'Male' : 'Female'
     };
 
-    // map proof names → ids
-   this.selectedProofIds = this.proofList
-  .filter(p => (emp.proofs || []).includes(p.pName))
-  .map(p => p.pId)
-  .slice(0, 1); // ✅ only one proof
-
-    this.uploadedUrls = new Set(emp.documents || []);
+    this.selectedProofIds = Array.from(new Set(emp.proofIds ?? []));
+    this.uploadedUrls = new Set(emp.documents ?? []);
   }
 
   // ================= FILE UPLOAD =================
   onFileSelected(event: any) {
-    const files = event.target.files;
-    if (!files || files.length === 0) return;
+  const files = event.target.files;
+  if (!files?.length) return;
 
-    this.uploadedUrls.clear(); // replace old files
-    this.isUploading = true;
+  this.isUploading = true;
 
-    const fileArray = Array.from(files);
-    let completed = 0;
+  let completed = 0;
+  const total = files.length;
 
-    fileArray.forEach((file: any) => {
-      this.employeService.getPresignedUrl(file.name, file.type).subscribe({
-        next: async (res: any) => {
-          try {
-            const upload = await fetch(res.url, {
-              method: 'PUT',
-              body: file,
-              headers: { 'Content-Type': file.type }
-            });
+  Array.from(files).forEach((file: any) => {
 
-            if (upload.ok) {
-              this.uploadedUrls.add(res.key);
-            }
-          } catch (err) {
-            console.error(err);
-          }
+    this.employeService.getPresignedUrl(file.name, file.type).subscribe({
+      next: async (res: any) => {
+        try {
+          const upload = await fetch(res.url, {
+            method: 'PUT',
+            body: file,
+            headers: { 'Content-Type': file.type }
+          });
 
-          completed++;
-          if (completed === fileArray.length) {
-            this.isUploading = false;
-            event.target.value = '';
-          }
-        },
-        error: () => {
-          completed++;
-          if (completed === fileArray.length) {
-            this.isUploading = false;
-          }
+        if (upload.ok && !this.uploadedUrls.has(res.key)) {
+  this.uploadedUrls.add(res.key);
+}
+
+        } catch (err) {
+          console.error(err);
         }
-      });
+
+        completed++;
+        if (completed === total) {
+          this.isUploading = false;
+          event.target.value = '';
+        }
+      },
+
+      error: () => {
+        completed++;
+        if (completed === total) {
+          this.isUploading = false;
+        }
+      }
     });
-  }
+  });
+}
 
   // ================= PROOFS =================
   getProofs() {
     this.employeService.getProofs().subscribe(res => {
       this.proofList = res;
-      this.loadEmployees(); // load after proofs
+      this.loadEmployees();
     });
   }
 
-onProofChange(event: any) {
-  const value = Number(event.target.value);
+  onProofChange(event: any) {
+    const id = Number(event.target.value);
 
-  if (!Number.isInteger(value)) return;
-
-  if (event.target.checked) {
-    // ✅ add only if not exists
-    if (!this.selectedProofIds.includes(value)) {
-      this.selectedProofIds.push(value);
+    if (event.target.checked) {
+      this.selectedProofIds = Array.from(new Set([...this.selectedProofIds, id]));
+    } else {
+      this.selectedProofIds = this.selectedProofIds.filter(x => x !== id);
     }
-  } else {
-    // ✅ remove properly
-    this.selectedProofIds = this.selectedProofIds.filter(x => x !== value);
   }
 
-  console.log("Selected Proof IDs:", this.selectedProofIds);
-}
-// ================= DROPDOWN =================
-toggleDropdown() {
-  this.showDropdown = !this.showDropdown;
-}
+  toggleDropdown() {
+    this.showDropdown = !this.showDropdown;
+  }
 
-// ================= VIEW DOCUMENT =================
-viewDocument(fileKey: string | null) {
-
-  if (!fileKey) {
+  // ================= VIEW DOCUMENT =================
+viewDocument(fileKey: string) {
+  if (!fileKey || fileKey.trim() === '') {
     alert("Invalid file");
     return;
   }
@@ -504,103 +491,81 @@ viewDocument(fileKey: string | null) {
       if (url) {
         window.open(url, '_blank');
       } else {
-        alert("URL not found");
+        alert("No URL returned from server");
       }
     },
     error: () => {
-      alert("Error opening file");
+      alert("Unable to fetch document");
     }
   });
 }
+
   // ================= SUBMIT =================
   onSubmit(form: NgForm) {
-    
-if (this.selectedEmployeeId === null) {
-  this.selectedProofIds = [...new Set(this.selectedProofIds)];
-}
-    if (!form.valid) {
-      alert("Fill all required fields");
-      return;
-    }
 
+    if (!form.valid) return alert("Fill all required fields");
     if (this.isUploading || this.isSubmitting) return;
 
-    this.isSubmitting = true;
-
-    // validations
-    if (this.selectedProofIds.length === 0) {
+    if (!this.selectedProofIds.length) {
       alert("Select at least one proof");
-      this.isSubmitting = false;
       return;
     }
 
-    if (this.uploadedUrls.size === 0 && this.selectedEmployeeId === null) {
+    if (!this.uploadedUrls.size && this.selectedEmployeeId === null) {
       alert("Upload at least one document");
-      this.isSubmitting = false;
       return;
     }
+
+    this.isSubmitting = true;
 
     const formData = new FormData();
 
     if (this.selectedEmployeeId !== null) {
-      formData.append("EmpId", this.selectedEmployeeId.toString());
+      formData.append("EmpId", String(this.selectedEmployeeId));
     }
 
     if (!form.value.deptId) {
-  alert("Select Department");
-  this.isSubmitting = false;
-  return;
-}
+      alert("Select Department");
+      this.isSubmitting = false;
+      return;
+    }
 
-formData.append("DeptId", form.value.deptId.toString());
-
-    // 🚀 SAFE VALUES
-    formData.append("Name", form.value.name || '');
-    formData.append("PhoneNumber", form.value.phoneNumber || '');
-    formData.append("DeptId", form.value.deptId ? form.value.deptId.toString() : '0');
-    formData.append("Address", form.value.address || '');
-   formData.append("Gender", form.value.gender === 'Male' ? 'true' : 'false');
+    formData.append("Name", form.value.name ?? '');
+    formData.append("PhoneNumber", form.value.phoneNumber ?? '');
+    formData.append("DeptId", String(form.value.deptId));
+    formData.append("Address", form.value.address ?? '');
+formData.append("Gender", form.value.gender === 'Male' ? 'true' : 'false');
 
     // proofs
-//  const uniqueProofs = [...new Set(this.selectedProofIds)]
-//   .filter(x => x && !isNaN(x));
-const uniqueProofs = Array.from(new Set(this.selectedProofIds));
-    uniqueProofs.forEach(id => {
-      formData.append("ProofIds", id.toString());
+    Array.from(new Set(this.selectedProofIds)).forEach(id => {
+      formData.append("ProofIds", String(id));
     });
 
     // documents
-    // this.uploadedUrls.forEach(key => {
-    //   formData.append("DocumentPaths", key);
-    // });
-Array.from(this.uploadedUrls).forEach(key => {
-  formData.append("DocumentPaths", key);
-});
-    // 🔍 DEBUG
-    console.log("=== FORM DATA ===");
-    formData.forEach((value, key) => {
-      console.log(key, value);
+    Array.from(this.uploadedUrls).forEach(key => {
+      formData.append("DocumentPaths", key);
     });
 
-    const request = this.selectedEmployeeId !== null
-      ? this.employeService.updateEmployee(formData)
-      : this.employeService.addEmployee(formData);
+    const request =
+      this.selectedEmployeeId !== null
+        ? this.employeService.updateEmployee(formData)
+        : this.employeService.addEmployee(formData);
 
     request.subscribe({
-      next: (res) => {
-        alert(this.selectedEmployeeId !== null ? "Updated Successfully" : "Saved Successfully");
+      next: () => {
+        alert(this.selectedEmployeeId ? "Updated Successfully" : "Saved Successfully");
 
         form.resetForm();
         this.employee = this.getEmptyEmployee();
         this.selectedProofIds = [];
-        this.uploadedUrls.clear();
+        this.uploadedUrls = new Set<string>();
         this.selectedEmployeeId = null;
 
         this.loadEmployees();
         this.isSubmitting = false;
       },
       error: (err) => {
-        console.error("ERROR:", err);
+        console.error(err);
         alert(JSON.stringify(err.error));
         this.isSubmitting = false;
       }
@@ -608,26 +573,48 @@ Array.from(this.uploadedUrls).forEach(key => {
   }
 
   // ================= LOAD =================
-  loadEmployees() {
+loadEmployees() {
   this.employeService.getEmployees().subscribe(res => {
 
     this.employees = (res || []).map(emp => {
 
-      const proofNames = (emp.proofs || []).map((id: number) => {
-        const match = this.proofList?.find(p => p.pId == id);
-        return match ? match.pName : id;
-      });
+      // 🔥 HANDLE ALL FORMATS
+      let ids: number[] = [];
+
+      if (Array.isArray(emp.proofIds)) {
+        ids = emp.proofIds.map((x: any) => +x);
+      }
+      else if (typeof emp.proofIds === 'string') {
+        ids = emp.proofIds.split(',').map((x: string) => +x);
+      }
+      else if (Array.isArray(emp.proofs) && typeof emp.proofs[0] === 'number') {
+        ids = emp.proofs.map((x: any) => +x);
+      }
+
+      console.log("IDS:", ids);
+
+const proofNames = Array.isArray(emp.proofs)
+  ? [...new Set(emp.proofs)]   // ✅ remove duplicates
+  : emp.proofs
+    ? [...new Set(emp.proofs.split(','))]
+    : [];
 
       return {
         ...emp,
-        proofs: [...new Set(proofNames || [])],
-        documents: [...new Set(emp.documents || [])] // ✅ prevent null
+        proofs: proofNames,
+
+        documents: Array.from(new Set(
+          Array.isArray(emp.documents)
+            ? emp.documents
+            : emp.documents
+              ? emp.documents.split(',')
+              : []
+        ))
       };
     });
 
   });
 }
-
   getDepartments() {
     this.employeService.getDepartments().subscribe(res => {
       this.departments = res;
@@ -643,9 +630,7 @@ Array.from(this.uploadedUrls).forEach(key => {
         alert(res);
         this.loadEmployees();
       },
-      error: () => {
-        alert("Delete failed");
-      }
+      error: () => alert("Delete failed")
     });
   }
 }
