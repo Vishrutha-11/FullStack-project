@@ -1056,7 +1056,15 @@ export class EmployeformComponent implements OnInit {
    this.selectedProofIds = this.proofList
     .filter(p => emp.proofs?.includes(p.pName))
     .map(p => p.pId);
-    this.uploadedUrls = new Set(emp.documents ?? []);
+
+
+  const docs = Array.isArray(emp.documents)
+    ? emp.documents
+    : emp.documents
+      ? emp.documents.split(',')
+      : [];
+
+  this.uploadedUrls = new Set(docs);
   }
 
   // ================= FILE UPLOAD =================

@@ -108,7 +108,16 @@
   <small *ngIf="uploadedUrls.size === 0">
     Document required
   </small>
+  <!-- ✅ EXISTING / EDIT MODE DOCUMENTS -->
+<div *ngIf="uploadedUrls.size > 0" class="uploaded-preview">
+  <p>Uploaded Files:</p>
+
+  <div *ngFor="let doc of uploadedUrls">
+    📄 {{ doc }}
+  </div>
 </div>
+</div>
+
       <!-- BUTTON -->
      <button type="submit">
   {{ selectedEmployeeId ? 'Update' : 'Save' }}
