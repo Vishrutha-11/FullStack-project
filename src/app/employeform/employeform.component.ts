@@ -1053,11 +1053,9 @@ export class EmployeformComponent implements OnInit {
       gender: emp.gender ? 'Male' : 'Female'
     };
 
-   this.selectedProofIds = Array.isArray(emp.proofIds)
-  ? emp.proofIds
-  : emp.proofIds
-    ? emp.proofIds.split(',').map(Number)
-    : [];
+   this.selectedProofIds = this.proofList
+    .filter(p => emp.proofs?.includes(p.pName))
+    .map(p => p.pId);
     this.uploadedUrls = new Set(emp.documents ?? []);
   }
 
