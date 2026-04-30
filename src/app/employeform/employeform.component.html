@@ -1,6 +1,7 @@
 <div class="main-wrapper">
 
-  <!-- FORM -->
+
+  <!-- ================= FORM ================= -->
   <div class="form-container">
     <h1>Employee Form</h1>
 
@@ -29,7 +30,7 @@
       <!-- DEPARTMENT -->
       <div class="input-group dept-group">
         <select name="deptId" [(ngModel)]="employee.deptId" #deptId="ngModel" required>
-          <option value="" disabled >Select</option>
+          <option value="" disabled>Select</option>
           <option *ngFor="let d of departments" [value]="d.deptId">
             {{ d.name }}
           </option>
@@ -63,70 +64,76 @@
       </div>
 
 
-   
 
- <!-- PROOFS -->
-<div class="proof-group">
 
-  <label class="proof-label">Proofs</label>
+      <!-- ================= PROOFS ================= -->
+      <div class="proof-group">
 
-  <!-- DROPDOWN BUTTON -->
-  <div class="dropdown" (click)="toggleDropdown()">
-    Select Proofs ▼
+        <label class="proof-label">Proofs</label>
+
+        <!-- ================= DOCUMENT UPLOAD ================= -->
+        <div class="dropdown" (click)="toggleDropdown()">
+          Select Proofs ▼
+        </div>
+
+        <!-- ================= DROPDOWN LIST ================= -->
+        <div class="dropdown-list" *ngIf="showDropdown">
+
+          <label *ngFor="let p of proofList" class="dropdown-item">
+            <input type="checkbox" [checked]="selectedProofIds.includes(p.pId)"
+              (change)="onProofToggle(p.pId, $any($event.target).checked)">
+            <span>{{ p.pName }}</span>
+
+          </label>
+
+        </div>
+
+        <!-- VALIDATION -->
+        <div class="error" *ngIf="empForm.submitted && selectedProofIds.length === 0">
+          Select at least one proof
+        </div>
+
+      </div>
+
+      <!-- ================= DOCUMENT UPLOAD ================= -->
+      <div class="input-group">
+        <span>Upload Document</span>
+
+        <input type="file" (change)="onFileSelected($event)" multiple required>
+
+        <!-- ✅ FIXED for Set -->
+        <small *ngIf="uploadedUrls.size === 0">
+          Document required
+        </small>
+        <!-- OLD FILES -->
+<div *ngIf="existingDocuments.length > 0">
+  <p>Existing Files:</p>
+
+  <div *ngFor="let doc of existingDocuments">
+    📄 {{ doc }}
   </div>
-
-  <!-- DROPDOWN LIST -->
-<div class="dropdown-list" *ngIf="showDropdown">
-
-  <label *ngFor="let p of proofList" class="dropdown-item">
-<input type="checkbox"
-       [checked]="selectedProofIds.includes(p.pId)"
-       (change)="onProofToggle(p.pId, $any($event.target).checked)">
-    <span>{{ p.pName }}</span>
-
-  </label>
-
 </div>
 
-  <!-- VALIDATION -->
-  <div class="error"
-       *ngIf="empForm.submitted && selectedProofIds.length === 0">
-    Select at least one proof
-  </div>
-
-</div>
-
-       <!-- UPLOAD DOCUMENT -->
-<div class="input-group">
-  <span>Upload Document</span>
-
-  <input type="file"
-         (change)="onFileSelected($event)"
-         multiple required>
-
-  <!-- ✅ FIXED for Set -->
-  <small *ngIf="uploadedUrls.size === 0">
-    Document required
-  </small>
-  <!-- ✅ EXISTING / EDIT MODE DOCUMENTS -->
-<div *ngIf="uploadedUrls.size > 0" class="uploaded-preview">
-  <p>Uploaded Files:</p>
+<!-- NEW FILES -->
+<div *ngIf="uploadedUrls.size > 0">
+  <p>New Uploads:</p>
 
   <div *ngFor="let doc of uploadedUrls">
     📄 {{ doc }}
   </div>
 </div>
-</div>
+      </div>
 
       <!-- BUTTON -->
-     <button type="submit">
-  {{ selectedEmployeeId ? 'Update' : 'Save' }}
-</button>
+      <button type="submit">
+        {{ selectedEmployeeId ? 'Update' : 'Save' }}
+      </button>
 
     </form>
   </div>
 
-  <!-- TABLE -->
+
+  <!-- ================= TABLE ================= -->
   <div class="table-container">
     <h2>Employee List</h2>
 
@@ -151,32 +158,33 @@
         <td>{{ emp.department }}</td>
         <td>{{ emp.address }}</td>
         <td>{{ emp.gender ? 'Male' : 'Female' }}</td>
+        <!-- PROOFS -->
+        <td>
+          {{ emp.proofs?.length ? emp.proofs.join(', ') : 'No Proof' }}
+        </td>
+        <!-- DOCUMENTS -->
+        <td>
+          <ng-container *ngIf="emp.documents?.length > 0; else noDocs">
 
-   <td>
-  {{ emp.proofs?.length ? emp.proofs.join(', ') : 'No Proof' }}
-</td>
-<td>
-  <ng-container *ngIf="emp.documents?.length > 0; else noDocs">
+            <div *ngFor="let doc of emp.documents">
+              <button (click)="viewDocument(doc)">
+                View
+              </button>
+            </div>
 
- <div *ngFor="let doc of emp.documents">
-  <button (click)="viewDocument(doc)">
-    View
-  </button>
-</div>
+          </ng-container>
 
-  </ng-container>
-
-  <ng-template #noDocs>
-    No Documents
-  </ng-template>
-</td>
+          <ng-template #noDocs>
+            No Documents
+          </ng-template>
+        </td>
         <!-- ACTION -->
-       <td>
+        <td>
           <button class="action-btn edit" (click)="onEdit(emp)">Edit</button>
-       <button class="action-btn delete" (click)="onDelete(emp.empId)">
-  Delete
-</button>
-        </td> 
+          <button class="action-btn delete" (click)="onDelete(emp.empId)">
+            Delete
+          </button>
+        </td>
 
 
       </tr>

@@ -264,7 +264,7 @@ input[type="file"] {
 }
 
 .action-btn.edit {
-  background: ;
+
   color: white;
 }
 
@@ -286,6 +286,28 @@ td a {
 td a:hover {
   text-decoration: underline;
 }
-.span{
-  color:#8b7d74
+
+.span {
+  color: #8b7d74
+}
+
+
+.uploaded-preview {
+  margin-top: 12px;
+  /* ✅ adds space */
+  padding: 10px;
+  display: block;
+  background: #fff;
+  border: 1px solid #ccc;
+
+  border-radius: 6px;
+}
+
+.uploaded-preview div {
+  margin: 4px 0;
+}
+
+.input-group {
+  margin-bottom: 15px;
+  /* ✅ prevents overlap with next section */
 }
