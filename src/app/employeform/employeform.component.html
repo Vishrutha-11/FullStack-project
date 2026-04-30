@@ -63,30 +63,38 @@
       </div>
 
 
-       <!-- PROOFS -->
-      <div class="proof-group">
-        <span class="span">Proofs</span>
-        <label class="proof-label"></label>
+   
 
-        <!-- DROPDOWN BUTTON -->
-        <div class="dropdown" (click)="toggleDropdown()">
-          Select Proofs ▼
-        </div>
+ <!-- PROOFS -->
+<div class="proof-group">
 
-        <!-- DROPDOWN LIST -->
-        <div class="dropdown-list" *ngIf="showDropdown">
-          <label *ngFor="let p of proofList" class="dropdown-item">
-            <input type="checkbox" [value]="p.pId" (change)="onProofChange($event)"
-              [checked]="selectedProofIds.includes(p.pId)">
-            {{ p.pName }}
-          </label>
-        </div>
+  <label class="proof-label">Proofs</label>
 
-        <!-- VALIDATION -->
-        <div class="error" *ngIf="empForm.submitted && selectedProofIds.length === 0">
-          Select at least one proof
-        </div>
-      </div>
+  <!-- DROPDOWN BUTTON -->
+  <div class="dropdown" (click)="toggleDropdown()">
+    Select Proofs ▼
+  </div>
+
+  <!-- DROPDOWN LIST -->
+<div class="dropdown-list" *ngIf="showDropdown">
+
+  <label *ngFor="let p of proofList" class="dropdown-item">
+<input type="checkbox"
+       [checked]="selectedProofIds.includes(p.pId)"
+       (change)="onProofToggle(p.pId, $any($event.target).checked)">
+    <span>{{ p.pName }}</span>
+
+  </label>
+
+</div>
+
+  <!-- VALIDATION -->
+  <div class="error"
+       *ngIf="empForm.submitted && selectedProofIds.length === 0">
+    Select at least one proof
+  </div>
+
+</div>
 
        <!-- UPLOAD DOCUMENT -->
 <div class="input-group">
@@ -135,9 +143,9 @@
         <td>{{ emp.address }}</td>
         <td>{{ emp.gender ? 'Male' : 'Female' }}</td>
 
-        <td>
-          {{ emp.proofs?.length ? emp.proofs.join(', ') : 'No Proof' }}
-        </td>
+   <td>
+  {{ emp.proofs?.length ? emp.proofs.join(', ') : 'No Proof' }}
+</td>
 <td>
   <ng-container *ngIf="emp.documents?.length > 0; else noDocs">
 
