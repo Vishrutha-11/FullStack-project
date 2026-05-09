@@ -8,7 +8,7 @@ import { tap } from 'rxjs/operators';
 })
 export class EmployeService {
 
-  baseUrl = 'https://localhost:7282/api';
+ baseUrl = 'https://localhost:7282/api';
 
   constructor(private http: HttpClient) { }
 
@@ -25,12 +25,13 @@ export class EmployeService {
 
 
   getDepartments() {
-    return this.http.get<any[]>('https://localhost:7282/api/Employe/GetDepartments');
+    return this.http.get<any[]>(`${this.baseUrl}/Employe/GetDepartments`);
   }
 
   getProofs() {
-    return this.http.get<any[]>(`https://localhost:7282/api/Employe/GetProof`);
+    return this.http.get<any[]>(`${this.baseUrl}/Employe/GetProof`);
   }
+
   GetAmazonS3AccessKey() {
     return this.http.get(
       'https://external.balajitransports.in/api/DBConnectionString/GetAmazons3CredentialsS3AccessKey',
