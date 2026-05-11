@@ -2,6 +2,8 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
+import * as AWS from 'aws-sdk';
+declare var CryptoJS: any;
 
 @Injectable({
   providedIn: 'root'
@@ -46,25 +48,25 @@ export class EmployeService {
     );
   }
   // ✅ FIXED
-  getPresignedUrl(fileName: string, contentType: string) {
-    return this.http.get<any>(
-      `${this.baseUrl}/S3/GetPresignedUrl`,
-      {
-        params: { fileName, contentType }
-      }
-    );
-  }
+  // getPresignedUrl(fileName: string, contentType: string) {
+  //   return this.http.get<any>(
+  //     `${this.baseUrl}/S3/GetPresignedUrl`,
+  //     {
+  //       params: { fileName, contentType }
+  //     }
+  //   );
+  // }
 
   // ✅ VIEW FILE
-  getViewUrl(fileKey: string) {
-    return this.http.get(
-      `${this.baseUrl}/S3/GetFileViewUrl`,
-      {
-        params: { fileKey },
-        responseType: 'text'
-      }
-    );
-  }
+  // getViewUrl(fileKey: string) {
+  //   return this.http.get(
+  //     `${this.baseUrl}/S3/GetFileViewUrl`,
+  //     {
+  //       params: { fileKey },
+  //       responseType: 'text'
+  //     }
+  //   );
+  // }
 
   updateEmployee(data: any) {
     return this.http.put(
@@ -79,9 +81,10 @@ export class EmployeService {
       { responseType: 'text' } // ✅ same fix as update
     );
   }
+
+  
+
+
 }
-
-
-
 
 

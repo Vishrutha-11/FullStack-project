@@ -1,19 +1,19 @@
 import { Component, OnInit } from '@angular/core';
 import { NgForm } from '@angular/forms';
 import { EmployeService } from '../employe.service';
+import {
+  S3Client
+} from '@aws-sdk/client-s3';
+import { Upload } from '@aws-sdk/lib-storage';
+import { GetObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import * as CryptoJS from 'crypto-js';
-
 @Component({
   selector: 'app-employeform',
   templateUrl: './employeform.component.html',
   styleUrls: ['./employeform.component.css']
 })
 export class EmployeformComponent implements OnInit {
-
-  // ================= CONFIG =================
-  awsAccessKey: any;
-  awsSecretKey: any;
-  awsBucketName = "btsworkerfiles";
 
   // ================= DATA =================
   employees: any[] = [];
@@ -40,19 +40,63 @@ export class EmployeformComponent implements OnInit {
   ngOnInit(): void {
     this.getDepartments();
     this.getProofs();
-    this.loadAwsKeys();
+    // this.loadAwsKeys();
   }
 
-  // ================= AWS KEYS =================
-  loadAwsKeys() {
-    this.employeService.GetAmazonS3AccessKey().subscribe(res => {
-      this.awsAccessKey = this.decrypt(res);
+
+  // s3 bucket vraibles
+s3!: S3Client;
+
+awsAccessKey: any;
+awsSecretKey: any;
+
+
+initialized = false;
+
+async initS3(): Promise<void> {
+
+  if (this.initialized) return;
+
+  try {
+
+    const accessKeyEncrypted =
+      await this.employeService
+      .GetAmazonS3AccessKey()
+      .toPromise();
+
+    const secretKeyEncrypted =
+      await this.employeService
+      .GetAmazonS3SecretKey()
+      .toPromise();
+
+    this.awsAccessKey =
+      this.decrypt(accessKeyEncrypted || '');
+
+    this.awsSecretKey =
+      this.decrypt(secretKeyEncrypted || '');
+
+    this.s3 = new S3Client({
+
+      region: 'ap-south-1',
+
+      credentials: {
+
+        accessKeyId: this.awsAccessKey,
+
+        secretAccessKey: this.awsSecretKey
+      }
     });
 
-    this.employeService.GetAmazonS3SecretKey().subscribe(res => {
-      this.awsSecretKey = this.decrypt(res);
-    });
+    this.initialized = true;
+
+    console.log('S3 initialized');
+
+  } catch (error) {
+
+    console.error(error);
+
   }
+}
 
   // ================= EMPTY MODEL =================
   getEmptyEmployee() {
@@ -67,6 +111,7 @@ export class EmployeformComponent implements OnInit {
     };
   }
 existingDocuments: string[] = [];
+
   // ================= DECRYPT =================
   decrypt(encryptedText: string): string {
     const key = CryptoJS.enc.Utf8.parse('NLKpQsoPaeoZ55ul');
@@ -95,29 +140,36 @@ existingDocuments: string[] = [];
     });
   }
 
-  loadEmployees() {
-    this.employeService.getEmployees().subscribe(res => {
+ loadEmployees() {
 
-      this.employees = (res || []).map(emp => {
-        return {
-          ...emp,
+  this.employeService.getEmployees().subscribe(res => {
 
-          proofIds: Array.isArray(emp.proofIds)
-            ? emp.proofIds
-            : emp.proofIds
-              ? emp.proofIds.split(',').map(Number)
-              : [],
+    console.log(res);
 
-          documents: Array.isArray(emp.documents)
-            ? emp.documents
-            : emp.documents
-              ? emp.documents.split(',')
-              : []
-        };
-      });
+    this.employees = (res || []).map((emp: any) => {
 
+      return {
+
+        ...emp,
+
+        documents: Array.isArray(emp.documents)
+          ? emp.documents
+          : emp.documents
+            ? emp.documents.split(',')
+            : [],
+
+        proofs: Array.isArray(emp.proofs)
+          ? emp.proofs
+          : emp.proofs
+            ? emp.proofs.split(',')
+            : []
+      };
     });
-  }
+
+    console.log(this.employees);
+
+  });
+}
 
   // ================= EDIT =================
   onEdit(emp: any) {
@@ -145,7 +197,7 @@ existingDocuments: string[] = [];
     ? emp.documents
     : emp.documents?.split(',') || [];
     this.uploadedUrls = new Set(docs);
-      this.uploadedUrls.clear();
+ 
   }
 
   // ================= PROOFS =================
@@ -167,63 +219,125 @@ existingDocuments: string[] = [];
   }
 
   // ================= FILE UPLOAD =================
-  onFileSelected(event: any) {
-    const files = event.target.files;
-    if (!files?.length) return;
+async onFileSelected(event: any) {
 
-    this.isUploading = true;
+  const files = event.target.files;
 
-    let completed = 0;
-    const total = files.length;
+  if (!files?.length) return;
 
-    Array.from(files).forEach((file: any) => {
+  this.isUploading = true;
 
-      this.employeService.getPresignedUrl(file.name, file.type).subscribe({
-        next: async (res: any) => {
-          try {
-            const upload = await fetch(res.url, {
-              method: 'PUT',
-              body: file,
-              headers: { 'Content-Type': file.type }
-            });
+  await this.initS3();
 
-            if (upload.ok) {
-              this.uploadedUrls.add(res.key);
-            }
+  try {
 
-          } catch (err) {
-            console.error(err);
-          }
+    for (const file of Array.from(files) as any[]) {
 
-          completed++;
-          if (completed === total) {
-            this.isUploading = false;
-            event.target.value = '';
-          }
-        },
+    const fileKey =
+  'employee-documents/' +
+  Date.now() +
+  '_' +
+  file.name;
 
-        error: () => {
-          completed++;
-          if (completed === total) {
-            this.isUploading = false;
-          }
+      const parallelUploads3 = new Upload({
+
+        client: this.s3,
+
+        params: {
+
+          Bucket: 'btsworkerfiles',
+
+          Key: fileKey,
+
+          Body: file,
+
+          ContentType: file.type,
+          
         }
       });
-    });
-  }
 
-  // ================= VIEW DOCUMENT =================
-  viewDocument(fileKey: string) {
-    if (!fileKey?.trim()) {
-      alert("Invalid file");
-      return;
+      await parallelUploads3.done();
+this.uploadedUrls.clear();
+
+this.uploadedUrls.add(fileKey);
     }
 
-    this.employeService.getViewUrl(fileKey).subscribe({
-      next: (url: string) => window.open(url, '_blank'),
-      error: () => alert("Unable to fetch document")
-    });
+    event.target.value = '';
+
+  } catch (err) {
+
+    console.error(err);
+
+    alert('Upload failed');
+
+  } finally {
+
+    this.isUploading = false;
   }
+}
+
+  // ================= VIEW DOCUMENT =================
+async viewDocument(fileName: string) {
+
+  if (!fileName) {
+
+    alert('Invalid file');
+
+    return;
+  }
+
+  await this.initS3();
+
+  try {
+
+    let fileKey = fileName;
+
+    // if full URL stored in DB
+    if (fileKey.includes('amazonaws.com')) {
+
+      const parts = fileKey.split('.amazonaws.com/');
+
+      fileKey = parts[1];
+    }
+
+    // if only filename stored
+    if (
+      !fileKey.startsWith('employee-documents/')
+    ) {
+
+      fileKey =
+        'employee-documents/' + fileKey;
+    }
+
+    console.log('FINAL KEY:', fileKey);
+
+    const command = new GetObjectCommand({
+
+      Bucket: 'btsworkerfiles',
+
+      Key: fileKey
+    });
+
+    const signedUrl = await getSignedUrl(
+
+      this.s3,
+
+      command,
+
+      { expiresIn: 300 }
+    );
+
+    console.log(signedUrl);
+
+    window.open(signedUrl, '_blank');
+
+  } catch (err) {
+
+    console.error(err);
+
+    alert('Unable to open document');
+  }
+}
 
   // ================= SUBMIT =================
   onSubmit(form: NgForm) {
